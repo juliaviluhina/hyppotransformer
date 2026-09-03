@@ -1,0 +1,18 @@
+workspace_roots:
+  - /path/to/allowed/workspace
+profiles:
+  default:
+    executor: markdown-to-pdf
+    output_policy: beside-source
+executors:
+  markdown-to-pdf:
+    pandoc: /path/to/pandoc
+    browser: /path/to/chrome
+limits:
+  max_input_bytes: 1048576
+  timeout_ms: 120000
+server:
+  transport: stdio
+  host: 127.0.0.1
+  port: 7359
+  auth_token_env: HYPPOTRANSFORMER_TOKEN

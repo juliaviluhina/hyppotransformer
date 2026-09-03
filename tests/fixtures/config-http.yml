@@ -1,0 +1,17 @@
+workspace_roots:
+  - /opt/data/home/projects/hyppotransformer/tests/fixtures
+profiles:
+  default:
+    executor: fixture
+    output_policy: replace
+executors:
+  fixture:
+    pandoc: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-pandoc.sh
+    browser: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-browser.sh
+limits:
+  max_input_bytes: 1048576
+  timeout_ms: 5000
+server:
+  transport: http
+  host: 127.0.0.1
+  port: 7369

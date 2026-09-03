@@ -4,7 +4,10 @@ export interface ProcessResult { code: number | null; signal: NodeJS.Signals | n
 
 export function runProcess(command: string, args: string[], timeoutMs: number, cwd?: string): Promise<ProcessResult> {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, shell: false, stdio: ["ignore", "pipe", "pipe"] });
+    const isNodeScript = command.endsWith(".js") || command.endsWith(".mjs") || command.endsWith(".cjs");
+    const executable = isNodeScript ? process.execPath : command;
+    const commandArgs = isNodeScript ? [command, ...args] : args;
+    const child = spawn(executable, commandArgs, { cwd, shell: false, stdio: ["ignore", "pipe", "pipe"] });
     let stdout = ""; let stderr = ""; let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; child.kill("SIGTERM"); }, timeoutMs);
     child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8");

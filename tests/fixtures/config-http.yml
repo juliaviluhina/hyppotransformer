@@ -6,8 +6,8 @@ profiles:
     output_policy: replace
 executors:
   fixture:
-    pandoc: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-pandoc.sh
-    browser: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-browser.sh
+    pandoc: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-pandoc.mjs
+    browser: /opt/data/home/projects/hyppotransformer/tests/fixtures/fake-browser.mjs
 limits:
   max_input_bytes: 1048576
   timeout_ms: 5000

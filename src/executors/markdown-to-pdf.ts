@@ -1,6 +1,7 @@
 import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, basename } from "node:path";
+import { pathToFileURL } from "node:url";
 import { runProcess } from "./process.js";
 import type { TransformerConfig } from "../config/schema.js";
 import { TransformerError } from "../safety/errors.js";
@@ -10,6 +11,10 @@ export function buildPandocArgs(source: string, html: string, profile: { stylesh
   if (profile.stylesheet) args.push("--css", profile.stylesheet);
   if (profile.page_size) args.push("--metadata", `papersize=${profile.page_size}`);
   return args;
+}
+
+export function toLocalFileUrl(path: string): string {
+  return pathToFileURL(path).href;
 }
 
 export async function renderMarkdownToPdf(source: string, output: string, profile: string, config: TransformerConfig): Promise<void> {
@@ -25,7 +30,7 @@ export async function renderMarkdownToPdf(source: string, output: string, profil
     if (pandoc.timedOut) throw new TransformerError("TIMEOUT", "EXECUTOR_TIMEOUT", "The Markdown renderer timed out.");
     if (pandoc.code !== 0) throw new TransformerError("EXECUTOR", "EXECUTOR_NONZERO_EXIT", "The Markdown renderer failed.");
     await access(html).catch(() => { throw new TransformerError("EXECUTOR", "INTERMEDIATE_NOT_CREATED", "The renderer did not create its intermediate document."); });
-    const chrome = await runProcess(executor.browser, ["--headless=new", "--no-sandbox", "--disable-gpu", `--print-to-pdf=${output}`, `file://${html}`], config.limits.timeout_ms, dirname(source));
+    const chrome = await runProcess(executor.browser, ["--headless=new", "--no-sandbox", "--disable-gpu", `--print-to-pdf=${output}`, toLocalFileUrl(html)], config.limits.timeout_ms, dirname(source));
     if (chrome.timedOut) throw new TransformerError("TIMEOUT", "EXECUTOR_TIMEOUT", "The PDF renderer timed out.");
     if (chrome.code !== 0) throw new TransformerError("EXECUTOR", "EXECUTOR_NONZERO_EXIT", "The PDF renderer failed.");
   } finally {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdtemp, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, realpath, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { withinWorkspace } from "../../src/safety/paths.js";
@@ -11,7 +11,7 @@ describe("workspace policy", () => {
     const root = await temp();
     const file = join(root, "document.md");
     await writeFile(file, "# Hello");
-    await expect(withinWorkspace(file, [root])).resolves.toBe(file);
+    await expect(withinWorkspace(file, [root])).resolves.toBe(await realpath(file));
   });
 
   it("rejects a path outside configured roots", async () => {

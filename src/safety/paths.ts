@@ -1,15 +1,24 @@
+import { dirname, relative, resolve, basename, isAbsolute, join, sep } from "node:path";
 import { realpath } from "node:fs/promises";
-import { resolve, relative, isAbsolute } from "node:path";
 import { TransformerError } from "./errors.js";
 
+async function canonicalPath(path: string): Promise<string> {
+  try {
+    return await realpath(path);
+  } catch {
+    const parent = dirname(path);
+    if (parent === path) return resolve(path);
+    return join(await canonicalPath(parent), basename(path));
+  }
+}
+
 export async function withinWorkspace(path: string, roots: string[]): Promise<string> {
-  const candidate = resolve(path);
-  const canonical = await realpath(candidate).catch(() => candidate);
-  const allowed = roots.some((root) => {
-    const rootPath = resolve(root);
-    const rel = relative(rootPath, canonical);
-    return rel === "" || (!rel.startsWith(".." + "/") && rel !== ".." && !isAbsolute(rel));
+  const candidate = await canonicalPath(resolve(path));
+  const allowedRoots = await Promise.all(roots.map((root) => canonicalPath(resolve(root))));
+  const allowed = allowedRoots.some((rootPath) => {
+    const rel = relative(rootPath, candidate);
+    return rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !isAbsolute(rel));
   });
   if (!allowed) throw new TransformerError("POLICY_REFUSAL", "PATH_OUTSIDE_WORKSPACE", "The requested path is outside the configured workspace.");
-  return canonical;
+  return candidate;
 }
